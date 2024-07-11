@@ -1,18 +1,25 @@
 from openai import OpenAI
 from youtube_transcript_api import YouTubeTranscriptApi
+from dotenv import load_dotenv
 import os
+import re
 client = OpenAI(
-    # This is the default and can be omitted
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
+directory = os.environ.get("DIRECTORY_PATH")
 
+def clean_string(input_string):
+    # Remove all non-alphanumeric characters
+    cleaned_string = re.sub(r'[^a-zA-Z0-9]', '', input_string).lower()
+    return cleaned_string
 
 
 def write_transcript_to_file(title, transcript):
-  video_title = title.replace(" ", "-").replace(":", "-").replace("#", "-").lower()
+  video_title = clean_string(title)
   file_name = f"{video_title}.txt"
+  file_path = os.path.join(directory, file_name)
   
-  with open(file_name, "w") as file:
+  with open(file_path, "w") as file:
     file.write(transcript)
   
   print(f"Transcript saved to {file_name}")
@@ -34,7 +41,6 @@ def generate_openai_transcript(video_url):
 
 
 def generate_transcript(url, name):
-  for video in videos:
     print(url)
     print(name)
     transcript = generate_openai_transcript(url)
