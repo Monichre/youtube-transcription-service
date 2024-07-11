@@ -1,19 +1,28 @@
-from openai import OpenAI
+#!/usr/bin/env python3
+
 from youtube_transcript_api import YouTubeTranscriptApi
 from dotenv import load_dotenv
 import os
 import re
 load_dotenv()
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY"),
-)
+
+# client = OpenAI(
+#     api_key=os.environ.get("OPENAI_API_KEY"),
+# )
 directory = os.environ.get("DIRECTORY_PATH")
 print(directory)
 
+def to_camel_case(s):
+    parts = s.split('-')
+    # Capitalize the first letter of each part except the first one
+    return parts[0] + ''.join(word.capitalize() for word in parts[1:])
+
 def clean_string(input_string):
-    # Remove all non-alphanumeric characters
-    cleaned_string = re.sub(r'[^a-zA-Z0-9]', '-', input_string).lower()
-    return cleaned_string
+    # Replace all non-alphanumeric characters with dashes
+    cleaned_string = re.sub(r'[^a-zA-Z0-9]+', '-', input_string).strip('-').lower()
+    # Convert to camelCase
+    camel_case_string = to_camel_case(cleaned_string)
+    return camel_case_string
 
 
 def write_transcript_to_file(title, transcript):
