@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 
 from youtube_transcript_api import YouTubeTranscriptApi
-from openai_upload import upload_file_to_openai
 from dotenv import load_dotenv
 import os
 import re
 load_dotenv()
 
-# client = OpenAI(
-#     api_key=os.environ.get("OPENAI_API_KEY"),
-# )
 directory = os.environ.get("DIRECTORY_PATH")
-print(directory)
 
 def to_camel_case(s):
     parts = s.split('-')
@@ -49,17 +44,12 @@ def get_youtube_transcript(video_url):
         print(f"Error fetching transcript: {e}")
         return None
     
-    
-    
-
-
 
 def generate_transcript(url, name):
     file = get_youtube_transcript(url)
     print(file)
     file_path = write_transcript_to_file(name, file)
-    upload = upload_file_to_openai(file_path)
-    print(upload)
-    return upload
+    return file_path
+ 
     
         
