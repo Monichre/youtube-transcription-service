@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from youtube_transcript_api import YouTubeTranscriptApi
+from openai_upload import upload_file_to_openai
 from dotenv import load_dotenv
 import os
 import re
@@ -34,25 +35,31 @@ def write_transcript_to_file(title, transcript):
     file.write(transcript)
   
   print(f"Transcript saved to {file_name}")
+  return file_path
 
-def get_youtube_transcript(id):
+  
+
+def get_youtube_transcript(video_url):
+    id = video_url.split("v=")[1]
     try:
         transcript = YouTubeTranscriptApi.get_transcript(id)
-        return " ".join([entry['text'] for entry in transcript])
+        file = " ".join([entry['text'] for entry in transcript])
+        return file
     except Exception as e:
         print(f"Error fetching transcript: {e}")
         return None
-
-def generate_openai_transcript(video_url):
-    video_id = video_url.split("v=")[1]
-    youtube_transcript = get_youtube_transcript(video_id)
-    return youtube_transcript
+    
+    
+    
 
 
 
 def generate_transcript(url, name):
-    print(url)
-    print(name)
-    transcript = generate_openai_transcript(url)
-    write_transcript_to_file(name, transcript)
+    file = get_youtube_transcript(url)
+    print(file)
+    file_path = write_transcript_to_file(name, file)
+    upload = upload_file_to_openai(file_path)
+    print(upload)
+    return upload
+    
         
