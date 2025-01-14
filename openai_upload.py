@@ -1,3 +1,4 @@
+import json
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -7,6 +8,31 @@ client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
 vector_store_id = os.environ.get("UFO_DATA_STORE_ID")
+
+
+def chunk_text(text, chunk_size=500, overlap=50):
+    """
+    Splits 'text' into overlapping chunks of size 'chunk_size'.
+    Overlap ensures continuity between chunks.
+
+    :param text: The original text to chunk.
+    :param chunk_size: Max length (in chars) of each chunk.
+    :param overlap: Number of chars from the previous chunk to include in the next one.
+    :return: List of text chunks.
+    """
+    chunks = []
+    start = 0
+
+    while start < len(text):
+        end = start + chunk_size
+        # Extract the chunk
+        chunk = text[start:end]
+        chunks.append(chunk)
+
+        # Move the start pointer forward by chunk_size - overlap
+        start += chunk_size - overlap
+
+    return chunks
 
 
 def upload_file_to_openai(file_path):
@@ -31,7 +57,7 @@ def generate_embeddings(text):
     """
     try:
         response = client.embeddings.create(
-            model="text-embedding-ada-002",  # Select the desired embedding model
+            model="text-embedding-3-small",  # Select the desired embedding model
             input=text
         )
         embeddings = response['data'][0]['embedding']
@@ -41,10 +67,41 @@ def generate_embeddings(text):
         return None
 
 
-def process_and_upload_document(file_path):
+def process_and_upload_document(content_payload):
     """
     Processes the document to generate embeddings and uploads it to the vector store.
     """
+    markdown = content_payload['markdown']
+    metadata = content_payload['metadata']
+    summary = content_payload['summary']
+    title = metadata['title']
+    url = metadata['url']
+
+    original_chunks = chunk_text(markdown, chunk_size=500, overlap=50)
+    summary_chunks = chunk_text(summary, chunk_size=500, overlap=50)
+
+    embedded_original_chunks = [
+        generate_embeddings(chunk) for chunk in original_chunks
+    ]
+
+    embedded_summary_chunks = [
+        generate_embeddings(chunk) for chunk in summary_chunks
+    ]
+
+    data_to_upload = {
+        "originalChunks": original_chunks,
+        "summaryChunks": summary_chunks,
+        "embeddedOriginalChunks": embedded_original_chunks,
+        "embeddedSummaryChunks": embedded_summary_chunks
+
+    }
+
+    final_json = json.dumps(data_to_upload, indent=2)
+
+    response = client.beta.vector_stores.files.upload(
+        vector_store_id=vector_store_id, file=(file_path, file_content))
+    print(response)
+
     try:
         # Read file content
         with open(file_path, "r") as file:
