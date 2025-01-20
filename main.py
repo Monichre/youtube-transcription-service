@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-from youtube import generate_transcript, parse_file_and_generate_transcript, write_transcript_to_file
+from disclosure_agent_ingestion.youtube import generate_transcript, parse_file_and_generate_transcript, write_transcript_to_file
 import argparse
 import os
-from openai_upload import upload_file_to_openai
-from web_content_processor import process_url
+from disclosure_agent_ingestion.openai_upload import upload_file_to_openai
+from disclosure_agent_ingestion.web_content_processor import process_url
 from datetime import datetime
 
 
